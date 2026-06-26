@@ -16,7 +16,7 @@ const io = new Server(server, {
   },
 });
 
-const activeRooms = new Set();
+const rooms = new Map();
 
 function createRoomId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -24,26 +24,63 @@ function createRoomId() {
 
 function createUniqueRoomId() {
   let roomId = createRoomId();
-  while (activeRooms.has(roomId)) {
+  while (rooms.has(roomId)) {
     roomId = createRoomId();
   }
-  activeRooms.add(roomId);
   return roomId;
 }
 
 io.on("connection", (socket) => {
+  let currentRoomId = null;
+  let currentRole = null;
   socket.on("join-room", (payload) => {
     if (payload.role === "teacher") {
       payload.roomId = createUniqueRoomId();
+      rooms.set(payload.roomId, {
+        teacher: socket.id,
+        student: null,
+      });
+
+      currentRoomId = payload.roomId;
+      currentRole = payload.role;
     }
-    if (!activeRooms.has(payload.roomId)) {
-      socket.emit("join-error", "Room does not exist.");
-      return;
+
+    if (payload.role === "student") {
+      const room = rooms.get(payload.roomId);
+      if (!room) {
+        socket.emit(
+          "join-error",
+          "Room is either not in session or does not exist.",
+        );
+        return;
+      }
+      if (room.student) {
+        socket.emit("join-error", "Room already has a student");
+        return;
+      }
+
+      room.student = socket.id;
+      currentRoomId = payload.roomId;
+      currentRole = payload.role;
     }
+
     socket.join(payload.roomId);
     socket.emit("joined-room", payload);
   });
-  socket.on("disconnect", () => {});
+  socket.on("disconnect", () => {
+    if (!currentRole || !currentRoomId) return;
+    const room = rooms.get(currentRoomId);
+    if (!room) return;
+
+    if (currentRole === "teacher") {
+      rooms.delete(currentRoomId);
+      return;
+    }
+
+    if (currentRole === "student") {
+      room.student = null;
+    }
+  });
 });
 
 // A simple test route
