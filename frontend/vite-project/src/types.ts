@@ -1,7 +1,13 @@
 export type Role = "student" | "teacher";
 
-export interface JoinRoomPayload{
-    username: string;
-    roomId: string;
-    role: Role;
+export interface JoinRoomPayload {
+  username: string;
+  roomId: string;
+  role: Role;
+}
+
+export interface CodeSelection {
+  fromLine: number;
+  toLine: number;
+  selectedText: string;
 }

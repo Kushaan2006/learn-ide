@@ -1,5 +1,9 @@
 import { useEffect, useState, type SetStateAction } from "react";
+import { EditorView } from "@codemirror/view";
 import { socket } from "../src/socket";
+import CodeMirror from "@uiw/react-codemirror";
+import { cpp } from "@codemirror/lang-cpp";
+import { oneDark } from "@codemirror/theme-one-dark";
 
 import type { Role, JoinRoomPayload } from "../src/types";
 import { useLocation } from "react-router-dom";
@@ -27,42 +31,18 @@ export default function IDE() {
     };
   }, []);
 
-  const handleStudentCodeChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    const latestCode = e.target.value;
-    setStudentCode(latestCode);
-    socket.emit("live-code-update", latestCode);
-  };
+  const shouldUpdateReview = (value: string, previousValue: string) => {
+    const trimmed = value.trimEnd();
 
-  const handleStudentEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (details.role !== "student") return;
-
-    if (
-      e.key === "Enter" ||
-      e.key === ";" ||
-      e.key === "{" ||
-      e.key === "}" ||
-      e.key === "ArrowUp" ||
-      e.key === "ArrowDown"
-    ) {
-      const textarea = e.currentTarget;
-
-      setTimeout(() => {
-        const latestCode = textarea.value;
-        setReviewCode(latestCode);
-        socket.emit("review-code-update", latestCode);
-      }, 0);
-    }
-
-    if (e.key === "Backspace") {
-      const textarea = e.currentTarget;
-      setTimeout(() => {
-        const text = textarea.value;
-        setReviewCode(text);
-        socket.emit("review-code-update", text);
-      }, 0);
-    }
+    return (
+      value.endsWith("\n") ||
+      trimmed.endsWith(";") ||
+      trimmed.endsWith("{") ||
+      trimmed.endsWith("}") ||
+      trimmed.endsWith(")") ||
+      trimmed.endsWith(">") ||
+      value.length < previousValue.length
+    );
   };
 
   return (
@@ -70,34 +50,47 @@ export default function IDE() {
       <h2>Code: {details?.roomId}</h2>
       <p>Name: {details?.username}</p>
       <p>Role: {details?.role}</p>
-      <div style={{ display: "flex", gap: "16px" }}>
-        <div style={{ width: "50%" }}>
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          gap: "16px",
+          padding: "16px",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ flex: 1 }}>
           <h3>Student Code</h3>
-          <textarea
+          <CodeMirror
             value={studentCode}
-            onChange={
-              details.role === "student" ? handleStudentCodeChange : undefined
-            }
-            onKeyDown={
-              details.role === "student" ? handleStudentEnter : undefined
-            }
-            readOnly={details.role === "teacher"}
-            placeholder={
-              details.role === "student"
-                ? "Code here..."
-                : "Waiting for student code..."
-            }
-            style={{ width: "100%", height: "400px" }}
+            height="400px"
+            theme={oneDark}
+            extensions={[cpp()]}
+            editable={details.role === "student"}
+            onChange={(value) => {
+              if (details.role !== "student") return;
+              const previousValue = value;
+              setStudentCode(value);
+              socket.emit("live-code-update", value);
+
+              const trimmed = value.trimEnd();
+
+              if (shouldUpdateReview(value, previousValue)) {
+                setReviewCode(value);
+                socket.emit("review-code-update", value);
+              }
+            }}
           />
         </div>
 
-        <div style={{ width: "50%" }}>
+        <div style={{ flex: 1 }}>
           <h3>Teacher Review</h3>
-          <textarea
+          <CodeMirror
             value={reviewCode}
-            readOnly
-            placeholder="Line-by-line review appears here..."
-            style={{ width: "100%", height: "400px" }}
+            height="400px"
+            theme={oneDark}
+            extensions={[cpp()]}
+            editable={false}
           />
         </div>
       </div>
