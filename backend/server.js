@@ -33,6 +33,9 @@ function createUniqueRoomId() {
 io.on("connection", (socket) => {
   let currentRoomId = null;
   let currentRole = null;
+  socket.on("update-code", (code) => {
+    socket.to(currentRoomId).emit("code-updated", code);
+  });
   socket.on("join-room", (payload) => {
     if (payload.role === "teacher") {
       payload.roomId = createUniqueRoomId();
