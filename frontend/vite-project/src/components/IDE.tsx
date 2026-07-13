@@ -1,11 +1,11 @@
 import { useEffect, useState, type SetStateAction } from "react";
 import { EditorView } from "@codemirror/view";
-import { socket } from "../src/socket";
+import { socket } from "../services/socket";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-import type { Role, JoinRoomPayload } from "../src/types";
+import type { Role, JoinRoomPayload } from "../services/types";
 import { useLocation } from "react-router-dom";
 
 export default function IDE() {

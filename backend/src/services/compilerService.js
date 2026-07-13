@@ -1,0 +1,82 @@
+const { execFile } = require("child_process");
+const crypto = require("crypto");
+const fs = require("fs/promises");
+const os = require("os");
+const path = require("path");
+const { promisify } = require("util");
+
+const execFileAsync = promisify(execFile);
+
+async function compileCpp(code) {
+  const executionId = crypto.randomUUID();
+
+  const tempDirectory = path.join(os.tmpdir(), `learn-ide-${executionId}`);
+
+  const sourceFilePath = path.join(tempDirectory, "main.cpp");
+
+  try {
+    // 1. Create a unique temporary folder
+    await fs.mkdir(tempDirectory, {
+      recursive: true,
+    });
+
+    // 2. Write the student's code into main.cpp
+    await fs.writeFile(sourceFilePath, code, "utf8");
+
+    // 3. Docker arguments
+    const dockerArguments = [
+      "run",
+      "--rm",
+
+      // Security/resource restrictions
+      "--network",
+      "none",
+      "--memory",
+      "256m",
+      "--cpus",
+      "0.5",
+      "--pids-limit",
+      "64",
+
+      // Mount temporary folder inside container
+      "--mount",
+      `type=bind,source=${tempDirectory},target=/app`,
+
+      // Docker image
+      "cpp-sandbox",
+
+      // Fixed command executed inside the container
+      "bash",
+      "-lc",
+      "g++ main.cpp -std=c++17 -o program && timeout 5s ./program",
+    ];
+
+    const { stdout, stderr } = await execFileAsync("docker", dockerArguments, {
+      timeout: 10_000,
+      maxBuffer: 1024 * 1024,
+    });
+
+    return {
+      success: true,
+      stdout,
+      stderr,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      stdout: error.stdout || "",
+      stderr: error.stderr || error.message,
+      exitCode: error.code ?? null,
+    };
+  } finally {
+    // 4. Always remove temporary files
+    await fs.rm(tempDirectory, {
+      recursive: true,
+      force: true,
+    });
+  }
+}
+
+module.exports = {
+  compileCpp,
+};

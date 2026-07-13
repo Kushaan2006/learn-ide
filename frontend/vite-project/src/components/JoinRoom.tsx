@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { socket } from "../src/socket";
+import { socket } from "../services/socket";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import type { Role, JoinRoomPayload } from "../src/types";
+import type { Role, JoinRoomPayload } from "../services/types";
 export default function JoinRoom() {
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
