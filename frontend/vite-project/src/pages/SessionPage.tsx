@@ -8,8 +8,14 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { socket } from "../services/socket";
 
 import type { JoinRoomPayload } from "../types/session.types";
+import RunButton from "../components/RunButton";
 
 export default function SessionPage() {
+  interface ExecutionUpdate {
+    isRunning: boolean;
+    output: string;
+  }
+
   const [studentCode, setStudentCode] = useState("");
   const [reviewCode, setReviewCode] = useState("");
 
@@ -30,14 +36,26 @@ export default function SessionPage() {
       setReviewCode(newCode);
     };
 
+    const handleRunningCodeUpdate = ({
+      isRunning,
+      output,
+    }: ExecutionUpdate) => {
+      setOutput(output);
+      setIsRunning(isRunning);
+    };
+
     socket.on("live-code-updated", handleLiveCodeUpdated);
 
     socket.on("review-code-updated", handleReviewCodeUpdated);
+
+    socket.on("code-executed", handleRunningCodeUpdate);
 
     return () => {
       socket.off("live-code-updated", handleLiveCodeUpdated);
 
       socket.off("review-code-updated", handleReviewCodeUpdated);
+
+      socket.off("code-executed", handleRunningCodeUpdate);
     };
   }, []);
 
@@ -45,11 +63,17 @@ export default function SessionPage() {
     return <Navigate to="/" replace />;
   }
 
-  const runCode = async () => {
-    try {
-      setIsRunning(true);
-      setOutput("Running...");
+  const updateExecution = ({ isRunning, output }: ExecutionUpdate) => {
+    setIsRunning(isRunning);
+    setOutput(output);
 
+    socket.emit("code-running", { isRunning, output });
+  };
+
+  const runCode = async () => {
+    let out = "";
+    try {
+      updateExecution({ isRunning: true, output: "Running..." });
       const response = await fetch(
         `${import.meta.env.VITE_SERVER_URL}/api/compile`,
         {
@@ -67,20 +91,33 @@ export default function SessionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setOutput(data.error || "Request failed.");
+        updateExecution({
+          isRunning: false,
+          output: data.error || "Request failed.",
+        });
+
         return;
       }
 
       if (!data.success) {
-        setOutput(data.stderr || "Compilation failed.");
+        updateExecution({
+          isRunning: false,
+          output: data.stderr || "Compilation failed.",
+        });
+
         return;
       }
 
-      setOutput(data.stdout || "Program finished with no output.");
+      updateExecution({
+        isRunning: false,
+        output: data.stdout || "Program finished with no output.",
+      });
+      out = data.stdout;
     } catch {
-      setOutput("Could not connect to the compiler service.");
-    } finally {
-      setIsRunning(false);
+      updateExecution({
+        isRunning: false,
+        output: "Could not connect to the compiler service.",
+      });
     }
   };
 
@@ -138,9 +175,7 @@ export default function SessionPage() {
             <h2>Student Workspace</h2>
 
             <span>{details.role === "student" ? "Editable" : "Read only"}</span>
-            <button type="button" onClick={runCode} disabled={isRunning}>
-              {isRunning ? "Running..." : "Run Code"}
-            </button>
+            <RunButton isRunning={isRunning} onRun={runCode}></RunButton>
           </header>
 
           <CodeMirror

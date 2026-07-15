@@ -78,6 +78,12 @@ function registerSocketHandlers(io) {
       socket.to(socket.data.roomId).emit("live-code-updated", code);
     });
 
+    socket.on("code-running", ({ isRunning, output }) => {
+      socket
+        .to(socket.data.roomId)
+        .emit("code-executed", { isRunning, output });
+    });
+
     socket.on("review-code-update", (code) => {
       if (socket.data.role !== "student") {
         return;
