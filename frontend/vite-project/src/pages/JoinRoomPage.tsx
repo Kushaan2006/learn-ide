@@ -33,9 +33,28 @@ export default function JoinRoomPage() {
     };
   }, [navigate]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const checkBackend = async (): Promise<boolean> => {
+    try {
+      const response = await fetch("http://localhost:3000/api/health");
+
+      if (!response.ok) {
+        throw new Error("Backed Connection Failed ;-;");
+      }
+    } catch (error) {
+      setErrorMessage("Could not Connect to Backend");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
+
+    const backendActive = await checkBackend();
+
+    if (!backendActive) return;
 
     const cleanedUsername = username.trim();
     const cleanedRoomId = roomId.trim().toUpperCase();

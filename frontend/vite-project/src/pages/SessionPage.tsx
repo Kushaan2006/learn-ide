@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import CodeMirror from "@uiw/react-codemirror";
@@ -23,6 +23,9 @@ export default function SessionPage() {
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
 
+  //input
+  const [stdin, setStdin] = useState("");
+
   const location = useLocation();
 
   const details = location.state as JoinRoomPayload | null;
@@ -44,11 +47,17 @@ export default function SessionPage() {
       setIsRunning(isRunning);
     };
 
+    const handleInputUpdate = (input: string) => {
+      setStdin(input);
+    };
+
     socket.on("live-code-updated", handleLiveCodeUpdated);
 
     socket.on("review-code-updated", handleReviewCodeUpdated);
 
     socket.on("code-executed", handleRunningCodeUpdate);
+
+    socket.on("input-updated", handleInputUpdate);
 
     return () => {
       socket.off("live-code-updated", handleLiveCodeUpdated);
@@ -56,6 +65,8 @@ export default function SessionPage() {
       socket.off("review-code-updated", handleReviewCodeUpdated);
 
       socket.off("code-executed", handleRunningCodeUpdate);
+
+      socket.off("input-updated", handleInputUpdate);
     };
   }, []);
 
@@ -84,6 +95,7 @@ export default function SessionPage() {
           body: JSON.stringify({
             language: "cpp",
             code: studentCode,
+            stdin,
           }),
         },
       );
@@ -151,6 +163,13 @@ export default function SessionPage() {
     }
   };
 
+  const inputUpdate = (event: {
+    target: { value: SetStateAction<string> };
+  }) => {
+    setStdin(event.target.value);
+    socket.emit("input-update", event.target.value);
+  };
+
   return (
     <main className="session-page">
       <header className="session-header">
@@ -204,6 +223,14 @@ export default function SessionPage() {
             editable={false}
           />
         </article>
+      </section>
+      <section className="input-panel">
+        <textarea
+          value={stdin}
+          onChange={inputUpdate}
+          placeholder={"Enter input in sequential order"}
+          disabled={isRunning}
+        />
       </section>
       <section className="output-panel">
         <header>

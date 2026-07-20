@@ -7,12 +7,14 @@ const { promisify } = require("util");
 
 const execFileAsync = promisify(execFile);
 
-async function compileCpp(code) {
+async function compileCpp(code, stdin = " ") {
   const executionId = crypto.randomUUID();
 
   const tempDirectory = path.join(os.tmpdir(), `learn-ide-${executionId}`);
 
   const sourceFilePath = path.join(tempDirectory, "main.cpp");
+
+  const inputFilePath = path.join(tempDirectory, "input.txt");
 
   try {
     // 1. Create a unique temporary folder
@@ -22,6 +24,9 @@ async function compileCpp(code) {
 
     // 2. Write the student's code into main.cpp
     await fs.writeFile(sourceFilePath, code, "utf8");
+
+    //2.2 Write input into input.txt
+    await fs.writeFile(inputFilePath, stdin, "utf8");
 
     // 3. Docker arguments
     const dockerArguments = [
@@ -48,7 +53,7 @@ async function compileCpp(code) {
       // Fixed command executed inside the container
       "bash",
       "-lc",
-      "g++ main.cpp -std=c++17 -o program && timeout 5s ./program",
+      "g++ main.cpp -std=c++17 -o program && timeout 5s ./program < input.txt",
     ];
 
     const { stdout, stderr } = await execFileAsync("docker", dockerArguments, {

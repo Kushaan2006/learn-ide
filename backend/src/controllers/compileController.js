@@ -1,7 +1,7 @@
 const { compileCpp } = require("../services/compilerService");
 
 async function compileCode(req, res) {
-  const { language, code } = req.body;
+  const { language, code, stdin = " " } = req.body;
 
   if (!language) {
     return res.status(400).json({
@@ -21,7 +21,7 @@ async function compileCode(req, res) {
     });
   }
 
-  const result = await compileCpp(code);
+  const result = await compileCpp(code, stdin);
 
   if (!result.success) {
     return res.status(200).json({

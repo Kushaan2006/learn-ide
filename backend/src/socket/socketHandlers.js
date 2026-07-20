@@ -96,6 +96,10 @@ function registerSocketHandlers(io) {
       socket.to(socket.data.roomId).emit("review-code-updated", code);
     });
 
+    socket.on("input-update", (input) => {
+      socket.to(socket.data.roomId).emit("input-updated", input);
+    });
+
     socket.on("disconnect", () => {
       const { roomId, role } = socket.data;
 
