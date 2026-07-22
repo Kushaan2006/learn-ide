@@ -9,6 +9,7 @@ import { socket } from "../services/socket";
 
 import type { JoinRoomPayload } from "../types/session.types";
 import RunButton from "../components/RunButton";
+import VoiceControls from "../components/voiceControls";
 
 export default function SessionPage() {
   interface ExecutionUpdate {
@@ -183,6 +184,7 @@ export default function SessionPage() {
         </div>
 
         <div className="session-user">
+          <VoiceControls />
           <span>{details.username}</span>
           <span className="role-badge">{details.role}</span>
         </div>
