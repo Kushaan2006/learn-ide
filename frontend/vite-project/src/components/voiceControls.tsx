@@ -1,25 +1,49 @@
 import { useVoiceChat } from "../hooks/useVoiceChat";
 
-export default function VoiceControls() {
+interface VoiceControlsProps {
+  role: "teacher" | "student";
+}
+
+export default function VoiceControls({ role }: VoiceControlsProps) {
   const {
-    startMicrophone,
-    createPeerConnection,
-    addMicrophoneToPeer,
-    createAndSendOffer,
     remoteAudioRef,
-  } = useVoiceChat();
+    voiceStatus,
+    isMuted,
+    joinVoice,
+    toggleMute,
+    leaveVoice,
+  } = useVoiceChat({ role });
+
+  const isInVoice =
+    voiceStatus === "joining" ||
+    voiceStatus === "connecting" ||
+    voiceStatus === "connected";
 
   return (
-    <>
-      <button onClick={startMicrophone}>Enable Microphone</button>
-      <button onClick={createPeerConnection}>Create PC</button>
-      <button type="button" onClick={addMicrophoneToPeer}>
-        Add Microphone
-      </button>
-      <button type="button" onClick={createAndSendOffer}>
-        Start Voice Call
-      </button>
+    <section className="voice-controls">
+      {!isInVoice ? (
+        <button type="button" onClick={joinVoice}>
+          Join Voice
+        </button>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={toggleMute}
+            disabled={voiceStatus !== "connected"}
+          >
+            {isMuted ? "Unmute" : "Mute"}
+          </button>
+
+          <button type="button" onClick={leaveVoice}>
+            Leave Voice
+          </button>
+        </>
+      )}
+
+      <span className="voice-status">Voice: {voiceStatus}</span>
+
       <audio ref={remoteAudioRef} autoPlay />
-    </>
+    </section>
   );
 }

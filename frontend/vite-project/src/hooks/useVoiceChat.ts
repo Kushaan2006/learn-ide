@@ -1,190 +1,404 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { socket } from "../services/socket";
 
-export function useVoiceChat() {
-    const localStreamRef = useRef<MediaStream | null>(null);
-    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+
+//this section single handedly was the biggest pain
+
+type VoiceStatus =
+    | "idle"
+    | "joining"
+    | "connecting"
+    | "connected"
+    | "error";
+
+interface UseVoiceChatOptions {
+    role: "teacher" | "student";
+}
+
+export function useVoiceChat({
+    role,
+}: UseVoiceChatOptions) {
+    const localStreamRef =
+        useRef<MediaStream | null>(null);
+
+    const peerConnectionRef =
+        useRef<RTCPeerConnection | null>(null);
+
     const remoteAudioRef =
         useRef<HTMLAudioElement | null>(null);
-    const startMicrophone = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true
-            });
 
-            localStreamRef.current = stream;
+    const pendingIceCandidatesRef =
+        useRef<RTCIceCandidateInit[]>([]);
 
-            console.log("Microphone Stream: ", stream);
+    const [voiceStatus, setVoiceStatus] =
+        useState<VoiceStatus>("idle");
 
-        } catch (error) {
-            console.log("Microphone Error: ", error);
-        }
-    }
+    const [isMuted, setIsMuted] = useState(false);
 
     const createPeerConnection = () => {
-        const peerConnection = new RTCPeerConnection({
-            iceServers: [
-                {
-                    urls: "stun:stun.l.google.com:19302",
-                },
-            ],
-        });
+        if (peerConnectionRef.current) {
+            return peerConnectionRef.current;
+        }
 
-        peerConnection.ontrack = (event) => {
-            const remoteStream = event.streams[0];
-
-            if (!remoteAudioRef.current) {
-                console.error("Remote audio element not found");
-                return;
-            }
-
-            remoteAudioRef.current.srcObject = remoteStream;
-
-            console.log("Remote audio received:", remoteStream);
-        };
+        const peerConnection =
+            new RTCPeerConnection({
+                iceServers: [
+                    {
+                        urls: "stun:stun.l.google.com:19302",
+                    },
+                ],
+            });
 
         peerConnection.onicecandidate = (event) => {
             if (!event.candidate) {
                 return;
             }
 
-            socket.emit("voice-ice-candidate", event.candidate);
-
-            console.log("ICE candidate sent:", event.candidate);
+            socket.emit(
+                "voice-ice-candidate",
+                event.candidate,
+            );
         };
 
+        peerConnection.ontrack = (event) => {
+            const remoteStream = event.streams[0];
 
+            if (!remoteAudioRef.current) {
+                return;
+            }
 
-        peerConnectionRef.current = peerConnection;
+            remoteAudioRef.current.srcObject =
+                remoteStream;
+        };
 
-        console.log("Peer connection created:", peerConnection);
+        peerConnection.onconnectionstatechange = () => {
+            const state =
+                peerConnection.connectionState;
+
+            console.log("Voice connection state:", state);
+
+            if (state === "connected") {
+                setVoiceStatus("connected");
+            }
+
+            if (
+                state === "failed" ||
+                state === "disconnected"
+            ) {
+                setVoiceStatus("error");
+            }
+
+            if (state === "closed") {
+                setVoiceStatus("idle");
+            }
+        };
+
+        peerConnectionRef.current =
+            peerConnection;
+
+        return peerConnection;
     };
 
-    const addMicrophoneToPeer = () => {
-        const stream = localStreamRef.current;
-        const peerConnection = peerConnectionRef.current;
-
-        if (!stream) {
-            console.error("Microphone not detected");
-            return;
+    const startMicrophone = async () => {
+        if (localStreamRef.current) {
+            return localStreamRef.current;
         }
 
-        if (!peerConnection) {
-            console.error("Peer connection not created");
-            return;
-        }
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+                audio: true,
+            });
+
+        localStreamRef.current = stream;
+
+        return stream;
+    };
+
+    const addMicrophoneTracks = (
+        peerConnection: RTCPeerConnection,
+        stream: MediaStream,
+    ) => {
+        const existingSenders =
+            peerConnection.getSenders();
 
         stream.getTracks().forEach((track) => {
-            peerConnection.addTrack(track, stream);
-        })
+            const alreadyAdded =
+                existingSenders.some(
+                    (sender) => sender.track === track,
+                );
 
-        console.log("Microphone Track Added");
-    }
+            if (!alreadyAdded) {
+                peerConnection.addTrack(
+                    track,
+                    stream,
+                );
+            }
+        });
+    };
 
-    const createAndSendOffer = async () => {
-        const peerConnection = peerConnectionRef.current;
+    const flushPendingIceCandidates =
+        async () => {
+            const peerConnection =
+                peerConnectionRef.current;
 
-        if (!peerConnection) {
-            console.error("Peer connection not created");
+            if (!peerConnection) {
+                return;
+            }
+
+            for (const candidate of pendingIceCandidatesRef.current) {
+                await peerConnection.addIceCandidate(
+                    candidate,
+                );
+            }
+
+            pendingIceCandidatesRef.current = [];
+        };
+
+    const joinVoice = async () => {
+        if (
+            voiceStatus === "joining" ||
+            voiceStatus === "connecting" ||
+            voiceStatus === "connected"
+        ) {
             return;
         }
 
         try {
-            const offer = await peerConnection.createOffer();
+            setVoiceStatus("joining");
 
-            await peerConnection.setLocalDescription(offer);
+            const stream = await startMicrophone();
 
-            socket.emit("voice-offer", offer);
-            console.log("Voice offer created: ", offer);
+            const peerConnection =
+                createPeerConnection();
+
+            addMicrophoneTracks(
+                peerConnection,
+                stream,
+            );
+
+            setVoiceStatus("connecting");
+
+            if (role === "teacher") {
+                const offer =
+                    await peerConnection.createOffer();
+
+                await peerConnection.setLocalDescription(
+                    offer,
+                );
+
+                socket.emit("voice-offer", offer);
+            }
         } catch (error) {
-            console.error("Could not create voice offer: " + error)
+            console.error(
+                "Could not join voice:",
+                error,
+            );
+
+            setVoiceStatus("error");
+        }
+    };
+
+    const toggleMute = () => {
+        const stream = localStreamRef.current;
+
+        if (!stream) {
+            return;
         }
 
-    }
+        const nextMutedState = !isMuted;
 
-    //I was too tired, will fix this later
+        stream.getAudioTracks().forEach(
+            (track) => {
+                track.enabled = !nextMutedState;
+            },
+        );
+
+        setIsMuted(nextMutedState);
+    };
+
+    const cleanupVoice = () => {
+        localStreamRef.current
+            ?.getTracks()
+            .forEach((track) => {
+                track.stop();
+            });
+
+        localStreamRef.current = null;
+
+        peerConnectionRef.current?.close();
+        peerConnectionRef.current = null;
+
+        pendingIceCandidatesRef.current = [];
+
+        if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject =
+                null;
+        }
+
+        setIsMuted(false);
+        setVoiceStatus("idle");
+    };
+
+    const leaveVoice = () => {
+        socket.emit("voice-leave");
+        cleanupVoice();
+    };
+
     useEffect(() => {
         const handleVoiceOffer = async (
             offer: RTCSessionDescriptionInit,
         ) => {
-            const peerConnection = peerConnectionRef.current;
-
-            if (!peerConnection) {
-                console.error(
-                    "Cannot receive offer because peer connection does not exist.",
-                );
-                return;
-            }
-
             try {
-                await peerConnection.setRemoteDescription(offer);
+                setVoiceStatus("connecting");
 
-                const answer = await peerConnection.createAnswer();
+                const stream =
+                    await startMicrophone();
 
-                await peerConnection.setLocalDescription(answer);
+                const peerConnection =
+                    createPeerConnection();
+
+                addMicrophoneTracks(
+                    peerConnection,
+                    stream,
+                );
+
+                await peerConnection.setRemoteDescription(
+                    offer,
+                );
+
+                await flushPendingIceCandidates();
+
+                const answer =
+                    await peerConnection.createAnswer();
+
+                await peerConnection.setLocalDescription(
+                    answer,
+                );
 
                 socket.emit("voice-answer", answer);
-
-                console.log("Voice answer created:", answer);
             } catch (error) {
-                console.error("Could not process voice offer:", error);
+                console.error(
+                    "Could not handle voice offer:",
+                    error,
+                );
+
+                setVoiceStatus("error");
             }
         };
 
         const handleVoiceAnswer = async (
             answer: RTCSessionDescriptionInit,
         ) => {
-            const peerConnection = peerConnectionRef.current;
+            const peerConnection =
+                peerConnectionRef.current;
 
             if (!peerConnection) {
-                console.error(
-                    "Cannot receive answer because peer connection does not exist.",
-                );
                 return;
             }
 
             try {
-                await peerConnection.setRemoteDescription(answer);
+                await peerConnection.setRemoteDescription(
+                    answer,
+                );
 
-                console.log("Voice answer received:", answer);
+                await flushPendingIceCandidates();
             } catch (error) {
-                console.error("Could not process voice answer:", error);
+                console.error(
+                    "Could not handle voice answer:",
+                    error,
+                );
+
+                setVoiceStatus("error");
             }
         };
 
         const handleIceCandidate = async (
             candidate: RTCIceCandidateInit,
         ) => {
-            const peerConnection = peerConnectionRef.current;
+            const peerConnection =
+                peerConnectionRef.current;
 
             if (!peerConnection) {
-                console.error(
-                    "Cannot add ICE candidate because peer connection does not exist.",
+                pendingIceCandidatesRef.current.push(
+                    candidate,
+                );
+                return;
+            }
+
+            if (!peerConnection.remoteDescription) {
+                pendingIceCandidatesRef.current.push(
+                    candidate,
                 );
                 return;
             }
 
             try {
-                await peerConnection.addIceCandidate(candidate);
-
-                console.log("ICE candidate received:", candidate);
+                await peerConnection.addIceCandidate(
+                    candidate,
+                );
             } catch (error) {
-                console.error("Could not add ICE candidate:", error);
+                console.error(
+                    "Could not add ICE candidate:",
+                    error,
+                );
             }
         };
 
-        socket.on("voice-offer", handleVoiceOffer);
-        socket.on("voice-answer", handleVoiceAnswer);
-        socket.on("voice-ice-candidate", handleIceCandidate);
+        const handleVoiceUserLeft = () => {
+            cleanupVoice();
+        };
 
+        socket.on(
+            "voice-offer",
+            handleVoiceOffer,
+        );
+
+        socket.on(
+            "voice-answer",
+            handleVoiceAnswer,
+        );
+
+        socket.on(
+            "voice-ice-candidate",
+            handleIceCandidate,
+        );
+
+        socket.on(
+            "voice-user-left",
+            handleVoiceUserLeft,
+        );
 
         return () => {
-            socket.off("voice-offer", handleVoiceOffer);
-            socket.off("voice-answer", handleVoiceAnswer);
-            socket.off("voice-ice-candidate", handleIceCandidate);
+            socket.off(
+                "voice-offer",
+                handleVoiceOffer,
+            );
+
+            socket.off(
+                "voice-answer",
+                handleVoiceAnswer,
+            );
+
+            socket.off(
+                "voice-ice-candidate",
+                handleIceCandidate,
+            );
+
+            socket.off(
+                "voice-user-left",
+                handleVoiceUserLeft,
+            );
+
+            cleanupVoice();
         };
-    }, []);
+    }, [role]);
 
-
-    return { startMicrophone, createPeerConnection, addMicrophoneToPeer, createAndSendOffer, remoteAudioRef, };
+    return {
+        remoteAudioRef,
+        voiceStatus,
+        isMuted,
+        joinVoice,
+        toggleMute,
+        leaveVoice,
+    };
 }

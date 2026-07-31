@@ -85,9 +85,9 @@ function registerSocketHandlers(io) {
     });
 
     socket.on("review-code-update", (code) => {
-      if (socket.data.role !== "student") {
-        return;
-      }
+      // if (socket.data.role !== "student") {
+      //   return;
+      // }
 
       if (!socket.data.roomId) {
         return;
@@ -130,6 +130,16 @@ function registerSocketHandlers(io) {
       }
 
       socket.to(roomId).emit("voice-ice-candidate", candidate);
+    });
+
+    socket.on("voice-leave", () => {
+      const { roomId } = socket.data;
+
+      if (!roomId) {
+        return;
+      }
+
+      socket.to(roomId).emit("voice-user-left");
     });
 
     socket.on("disconnect", () => {

@@ -164,6 +164,11 @@ export default function SessionPage() {
     }
   };
 
+  const handleReviewCodeChange = (value: string) => {
+    setReviewCode(value);
+    socket.emit("review-code-update", value);
+  };
+
   const inputUpdate = (event: {
     target: { value: SetStateAction<string> };
   }) => {
@@ -184,7 +189,7 @@ export default function SessionPage() {
         </div>
 
         <div className="session-user">
-          <VoiceControls />
+          <VoiceControls role={details.role} />
           <span>{details.username}</span>
           <span className="role-badge">{details.role}</span>
         </div>
@@ -222,7 +227,8 @@ export default function SessionPage() {
             minHeight="450px"
             theme={oneDark}
             extensions={[cpp()]}
-            editable={false}
+            editable={details.role === "teacher"}
+            onChange={handleReviewCodeChange}
           />
         </article>
       </section>
