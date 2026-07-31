@@ -17,6 +17,8 @@ export default function SessionPage() {
     output: string;
   }
 
+  const backendURL = import.meta.env.VITE_SERVER_URL;
+
   const [studentCode, setStudentCode] = useState("");
   const [reviewCode, setReviewCode] = useState("");
 
@@ -86,20 +88,17 @@ export default function SessionPage() {
     let out = "";
     try {
       updateExecution({ isRunning: true, output: "Running..." });
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER_URL}/api/compile`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            language: "cpp",
-            code: studentCode,
-            stdin,
-          }),
+      const response = await fetch(`${backendURL}/api/compile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          language: "cpp",
+          code: studentCode,
+          stdin,
+        }),
+      });
 
       const data = await response.json();
 
@@ -218,7 +217,7 @@ export default function SessionPage() {
         <article className="editor-panel">
           <header className="editor-panel-header">
             <h2>Review Workspace</h2>
-            <span>Read only</span>
+            <span>{details.role === "teacher" ? "Editable" : "Read only"}</span>
           </header>
 
           <CodeMirror

@@ -6,6 +6,8 @@ import { socket } from "../services/socket";
 import type { JoinRoomPayload, Role } from "../types/session.types";
 
 export default function JoinRoomPage() {
+  const backendURL = import.meta.env.VITE_SERVER_URL;
+
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
   const [role, setRole] = useState<Role>("student");
@@ -35,7 +37,7 @@ export default function JoinRoomPage() {
 
   const checkBackend = async (): Promise<boolean> => {
     try {
-      const response = await fetch("http://localhost:3000/api/health");
+      const response = await fetch(`${backendURL}/api/health`);
 
       if (!response.ok) {
         throw new Error("Backed Connection Failed ;-;");

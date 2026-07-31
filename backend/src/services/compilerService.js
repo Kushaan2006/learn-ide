@@ -7,7 +7,7 @@ const { promisify } = require("util");
 
 const execFileAsync = promisify(execFile);
 
-async function compileCpp(code, stdin = " ") {
+async function compileCpp(code, stdin = "") {
   const executionId = crypto.randomUUID();
 
   const tempDirectory = path.join(os.tmpdir(), `learn-ide-${executionId}`);

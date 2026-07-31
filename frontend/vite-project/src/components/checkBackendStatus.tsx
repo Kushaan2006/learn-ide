@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export default function CheckBackendStatus() {
+  const backendURL = import.meta.env.VITE_SERVER_URL;
   const [msg, setMsg] = useState("");
   const [recvRes, setRecvRes] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
@@ -10,7 +11,7 @@ export default function CheckBackendStatus() {
   const handleClick = async () => {
     try {
       setConnectionStatus("idle");
-      const response = await fetch("http://localhost:3000/api/health");
+      const response = await fetch(`${backendURL}/api/health`);
 
       if (!response.ok) {
         throw new Error("Backed Connection Failed ;-;");
