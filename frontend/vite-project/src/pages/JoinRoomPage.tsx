@@ -136,6 +136,11 @@ export default function JoinRoomPage() {
         <button type="submit">
           {role === "student" ? "Join Session" : "Create Session"}
         </button>
+        <button className="btn btn-primary">Test DaisyUI</button>
+
+        <div className="flex items-center gap-4 p-6 bg-base-200">
+          Tailwind works
+        </div>
       </form>
     </main>
   );
