@@ -3,7 +3,7 @@ import { useState } from "react";
 export default function CheckBackendStatus() {
   const backendURL = import.meta.env.VITE_SERVER_URL;
   const [msg, setMsg] = useState("");
-  const [recvRes, setRecvRes] = useState(false);
+  // const [recvRes, setRecvRes] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
     "idle" | "success" | "error"
   >("idle");

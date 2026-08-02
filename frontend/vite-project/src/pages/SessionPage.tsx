@@ -85,7 +85,7 @@ export default function SessionPage() {
   };
 
   const runCode = async () => {
-    let out = "";
+    // let out = "";
     try {
       updateExecution({ isRunning: true, output: "Running..." });
       const response = await fetch(`${backendURL}/api/compile`, {
@@ -124,7 +124,7 @@ export default function SessionPage() {
         isRunning: false,
         output: data.stdout || "Program finished with no output.",
       });
-      out = data.stdout;
+      // out = data.stdout;
     } catch {
       updateExecution({
         isRunning: false,
