@@ -1,11 +1,11 @@
-import { useEffect, useState, type SetStateAction } from "react";
-import { EditorView } from "@codemirror/view";
+import { useEffect, useState } from "react";
+// import { EditorView } from "@codemirror/view";
 import { socket } from "../services/socket";
 import CodeMirror from "@uiw/react-codemirror";
 import { cpp } from "@codemirror/lang-cpp";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-import type { Role, JoinRoomPayload } from "../services/types";
+// import type { Role, JoinRoomPayload } from "../services/types";
 import { useLocation } from "react-router-dom";
 
 export default function IDE() {
@@ -73,7 +73,7 @@ export default function IDE() {
               setStudentCode(value);
               socket.emit("live-code-update", value);
 
-              const trimmed = value.trimEnd();
+              // const trimmed = value.trimEnd();
 
               if (shouldUpdateReview(value, previousValue)) {
                 setReviewCode(value);

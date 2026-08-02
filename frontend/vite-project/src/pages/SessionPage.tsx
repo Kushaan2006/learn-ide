@@ -211,7 +211,7 @@ export default function SessionPage() {
         {/* Editors */}
         <section className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
           {/* Student editor */}
-          <article className="flex min-h-[500px] flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
+          <article className="flex min-h-125 flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
             <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
               <div>
                 <h2 className="font-semibold">Student Workspace</h2>
@@ -249,7 +249,7 @@ export default function SessionPage() {
           </article>
 
           {/* Review editor */}
-          <article className="flex min-h-[500px] flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
+          <article className="flex min-h-125 flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
             <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
               <div>
                 <h2 className="font-semibold">Review Workspace</h2>
