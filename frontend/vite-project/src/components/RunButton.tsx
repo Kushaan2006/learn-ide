@@ -5,7 +5,12 @@ interface RunButtonProps {
 
 export default function RunButton({ isRunning, onRun }: RunButtonProps) {
   return (
-    <button type="button" onClick={onRun} disabled={isRunning}>
+    <button
+      type="button"
+      className="btn btn-accent"
+      onClick={onRun}
+      disabled={isRunning}
+    >
       {isRunning ? "Running..." : "Run Code"}
     </button>
   );

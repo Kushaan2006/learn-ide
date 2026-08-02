@@ -176,76 +176,156 @@ export default function SessionPage() {
   };
 
   return (
-    <main className="session-page">
-      <header className="session-header">
-        <div>
-          <h1>Live Coding Session</h1>
+    <main className="flex min-h-screen flex-col bg-base-200">
+      {/* Top navbar */}
+      <header className="navbar border-b border-base-300 bg-base-100 px-4 shadow-sm">
+        <div className="flex-1">
+          <div>
+            <h1 className="text-xl font-bold">Learn IDE</h1>
 
-          <p>
-            Room:
-            <strong> {details.roomId}</strong>
-          </p>
+            <p className="text-sm text-base-content/60">
+              Room:
+              <span className="ml-1 font-mono font-semibold tracking-wider">
+                {details.roomId}
+              </span>
+            </p>
+          </div>
         </div>
 
-        <div className="session-user">
+        <div className="flex items-center gap-3">
           <VoiceControls role={details.role} />
-          <span>{details.username}</span>
-          <span className="role-badge">{details.role}</span>
+
+          <div className="hidden text-right sm:block">
+            <p className="text-sm font-medium">{details.username}</p>
+            <p className="text-xs capitalize text-base-content/60">
+              {details.role}
+            </p>
+          </div>
+
+          <div className="badge badge-primary capitalize">{details.role}</div>
         </div>
       </header>
 
-      <section className="editor-grid">
-        <article className="editor-panel">
-          <header className="editor-panel-header">
-            <h2>Student Workspace</h2>
+      {/* Main workspace */}
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        {/* Editors */}
+        <section className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
+          {/* Student editor */}
+          <article className="flex min-h-[500px] flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
+            <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
+              <div>
+                <h2 className="font-semibold">Student Workspace</h2>
 
-            <span>{details.role === "student" ? "Editable" : "Read only"}</span>
-            <RunButton isRunning={isRunning} onRun={runCode}></RunButton>
-          </header>
+                <p className="text-xs text-base-content/60">
+                  {details.role === "student" ? "Editable" : "Read only"}
+                </p>
+              </div>
 
-          <CodeMirror
-            value={studentCode}
-            height="100%"
-            minHeight="450px"
-            theme={oneDark}
-            extensions={[cpp()]}
-            editable={details.role === "student"}
-            onChange={handleStudentCodeChange}
-          />
-        </article>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`badge badge-sm ${
+                    details.role === "student" ? "badge-success" : "badge-ghost"
+                  }`}
+                >
+                  {details.role === "student" ? "Editing" : "Viewing"}
+                </span>
 
-        <article className="editor-panel">
-          <header className="editor-panel-header">
-            <h2>Review Workspace</h2>
-            <span>{details.role === "teacher" ? "Editable" : "Read only"}</span>
-          </header>
+                <RunButton isRunning={isRunning} onRun={runCode} />
+              </div>
+            </header>
 
-          <CodeMirror
-            value={reviewCode}
-            height="100%"
-            minHeight="450px"
-            theme={oneDark}
-            extensions={[cpp()]}
-            editable={details.role === "teacher"}
-            onChange={handleReviewCodeChange}
-          />
-        </article>
-      </section>
-      <section className="input-panel">
-        <textarea
-          value={stdin}
-          onChange={inputUpdate}
-          placeholder={"Enter input in sequential order"}
-          disabled={isRunning}
-        />
-      </section>
-      <section className="output-panel">
-        <header>
-          <h2>Output</h2>
-        </header>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <CodeMirror
+                value={studentCode}
+                height="100%"
+                minHeight="500px"
+                theme={oneDark}
+                extensions={[cpp()]}
+                editable={details.role === "student"}
+                onChange={handleStudentCodeChange}
+                className="h-full"
+              />
+            </div>
+          </article>
 
-        <pre>{output || "Output will appear here."}</pre>
-      </section>
+          {/* Review editor */}
+          <article className="flex min-h-[500px] flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
+            <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
+              <div>
+                <h2 className="font-semibold">Review Workspace</h2>
+
+                <p className="text-xs text-base-content/60">
+                  {details.role === "teacher" ? "Editable" : "Read only"}
+                </p>
+              </div>
+
+              <span
+                className={`badge badge-sm ${
+                  details.role === "teacher" ? "badge-success" : "badge-ghost"
+                }`}
+              >
+                {details.role === "teacher" ? "Editing" : "Viewing"}
+              </span>
+            </header>
+
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <CodeMirror
+                value={reviewCode}
+                height="100%"
+                minHeight="500px"
+                theme={oneDark}
+                extensions={[cpp()]}
+                editable={details.role === "teacher"}
+                onChange={handleReviewCodeChange}
+                className="h-full"
+              />
+            </div>
+          </article>
+        </section>
+
+        {/* Console */}
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {/* Input */}
+          <article className="rounded-box border border-base-300 bg-base-100 shadow-sm">
+            <header className="border-b border-base-300 px-4 py-3">
+              <h2 className="font-semibold">Standard Input</h2>
+              <p className="text-xs text-base-content/60">
+                Enter values exactly as your program expects them.
+              </p>
+            </header>
+
+            <div className="p-4">
+              <textarea
+                value={stdin}
+                onChange={inputUpdate}
+                placeholder={"Example:\n5\n10 20 30 40 50"}
+                disabled={isRunning}
+                className="textarea textarea-bordered min-h-32 w-full resize-y font-mono"
+              />
+            </div>
+          </article>
+
+          {/* Output */}
+          <article className="rounded-box border border-base-300 bg-base-100 shadow-sm">
+            <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
+              <div>
+                <h2 className="font-semibold">Output</h2>
+                <p className="text-xs text-base-content/60">
+                  Program output and compiler errors appear here.
+                </p>
+              </div>
+
+              {isRunning && (
+                <span className="loading loading-spinner loading-sm" />
+              )}
+            </header>
+
+            <pre className="min-h-32 overflow-auto whitespace-pre-wrap p-4 font-mono text-sm">
+              {output || "Output will appear here."}
+            </pre>
+          </article>
+        </section>
+      </div>
     </main>
   );
 }

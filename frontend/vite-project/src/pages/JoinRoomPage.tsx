@@ -81,65 +81,87 @@ export default function JoinRoomPage() {
   };
 
   return (
-    <main className="join-page">
-      <form className="join-form" onSubmit={handleSubmit}>
-        <h1>Learn IDE</h1>
+    <main className="min-h-screen bg-base-200 flex items-center justify-center p-4">
+      <form
+        className="card w-full max-w-md bg-base-100 shadow-xl"
+        onSubmit={handleSubmit}
+      >
+        <div className="card-body gap-5">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-primary">Learn IDE</h1>
 
-        <p className="join-subtitle">
-          Create or join a live mentoring session.
-        </p>
+            <p className="mt-2 text-sm text-base-content/60">
+              Create or join a live mentoring session.
+            </p>
+          </div>
 
-        <label htmlFor="username">Username</label>
-
-        <input
-          id="username"
-          type="text"
-          placeholder="Enter your name"
-          value={username}
-          onChange={(event) => {
-            setUsername(event.target.value);
-          }}
-        />
-
-        <label htmlFor="role">Role</label>
-
-        <select
-          id="role"
-          value={role}
-          onChange={(event) => {
-            setRole(event.target.value as Role);
-            setErrorMessage("");
-          }}
-        >
-          <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
-        </select>
-
-        {role === "student" && (
-          <>
-            <label htmlFor="room-id">Room ID</label>
+          {/* Username */}
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Username</legend>
 
             <input
-              id="room-id"
+              id="username"
               type="text"
-              placeholder="Example: AB12CD"
-              value={roomId}
+              className="input input-bordered w-full"
+              placeholder="Enter your name"
+              value={username}
               onChange={(event) => {
-                setRoomId(event.target.value.toUpperCase());
+                setUsername(event.target.value);
+                setErrorMessage("");
               }}
             />
-          </>
-        )}
+          </fieldset>
 
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {/* Role */}
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Role</legend>
 
-        <button type="submit">
-          {role === "student" ? "Join Session" : "Create Session"}
-        </button>
-        <button className="btn btn-primary">Test DaisyUI</button>
+            <select
+              id="role"
+              className="select select-bordered w-full"
+              value={role}
+              onChange={(event) => {
+                setRole(event.target.value as Role);
+                setErrorMessage("");
+              }}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+          </fieldset>
 
-        <div className="flex items-center gap-4 p-6 bg-base-200">
-          Tailwind works
+          {/* Room ID */}
+          {role === "student" && (
+            <fieldset className="fieldset">
+              <legend className="fieldset-legend">Room ID</legend>
+
+              <input
+                id="room-id"
+                type="text"
+                className="input input-bordered w-full uppercase tracking-widest"
+                placeholder="Example: AB12CD"
+                maxLength={6}
+                value={roomId}
+                onChange={(event) => {
+                  setRoomId(event.target.value.toUpperCase());
+                  setErrorMessage("");
+                }}
+              />
+            </fieldset>
+          )}
+
+          {/* Error */}
+          {errorMessage && (
+            <div role="alert" className="alert alert-error py-3">
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Submit */}
+          <button type="submit" className="btn btn-primary mt-2 w-full">
+            {role === "student" ? "Join Session" : "Create Session"}
+          </button>
         </div>
       </form>
     </main>
