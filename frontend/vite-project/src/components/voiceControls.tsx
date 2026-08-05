@@ -1,4 +1,4 @@
-import { useAgoraVoice } from "../hooks/useVoiceChat";
+import { useAgoraVoice } from "../hooks/useAgoraChat";
 
 interface VoiceControlsProps {
   role: "teacher" | "student";
