@@ -44,7 +44,7 @@ export default function VoiceControls({ role }: VoiceControlsProps) {
 
       <span className="voice-status text-sm">Voice: {voiceStatus}</span>
 
-      <audio ref={remoteAudioRef} autoPlay />
+      <audio ref={remoteAudioRef} autoPlay playsInline />
     </section>
   );
 }

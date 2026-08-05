@@ -65,19 +65,31 @@ export function useVoiceChat({
 
             socket.emit(
                 "voice-ice-candidate",
-                event.candidate,
+                event.candidate.toJSON(),
             );
         };
 
-        peerConnection.ontrack = (event) => {
-            const remoteStream = event.streams[0];
+        peerConnection.ontrack = async (event) => {
+            console.log("Remote audio track received");
 
-            if (!remoteAudioRef.current) {
+            const remoteStream =
+                event.streams[0] ?? new MediaStream([event.track]);
+
+            const audioElement = remoteAudioRef.current;
+
+            if (!audioElement) {
+                console.error("Remote audio element not found");
                 return;
             }
 
-            remoteAudioRef.current.srcObject =
-                remoteStream;
+            audioElement.srcObject = remoteStream;
+
+            try {
+                await audioElement.play();
+                console.log("Remote audio playback started");
+            } catch (error) {
+                console.error("Remote audio playback failed:", error);
+            }
         };
 
         peerConnection.onconnectionstatechange = () => {
