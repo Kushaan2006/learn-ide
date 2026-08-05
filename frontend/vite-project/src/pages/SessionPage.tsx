@@ -9,7 +9,7 @@ import { socket } from "../services/socket";
 
 import type { JoinRoomPayload } from "../types/session.types";
 import RunButton from "../components/RunButton";
-import VoiceControls from "../components/voiceControls";
+// import VoiceControls from "../components/voiceControls";
 
 export default function SessionPage() {
   interface ExecutionUpdate {
