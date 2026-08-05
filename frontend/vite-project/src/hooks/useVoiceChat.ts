@@ -42,9 +42,18 @@ export function useVoiceChat({
 
         const peerConnection =
             new RTCPeerConnection({
+                iceTransportPolicy: "relay",
                 iceServers: [
                     {
                         urls: "stun:stun.l.google.com:19302",
+                    },
+                    {
+                        urls: [
+                            "turn:learn-ide-turn-kushaan.publicvm.com:3478?transport=udp",
+                            "turn:learn-ide-turn-kushaan.publicvm.com:3478?transport=tcp",
+                        ],
+                        username: import.meta.env.VITE_TURN_SERVER_USERNAME,
+                        credential: import.meta.env.VITE_TURN_SERVER_PASSWORD,
                     },
                 ],
             });
