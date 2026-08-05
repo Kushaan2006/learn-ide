@@ -89,9 +89,9 @@ function registerSocketHandlers(io) {
       //   return;
       // }
 
-      if (!socket.data.roomId) {
-        return;
-      }
+      // if (!socket.data.roomId) {
+      //   return;
+      // }
 
       socket.to(socket.data.roomId).emit("review-code-updated", code);
     });
@@ -100,47 +100,47 @@ function registerSocketHandlers(io) {
       socket.to(socket.data.roomId).emit("input-updated", input);
     });
 
-    socket.on("voice-offer", (offer) => {
-      const { roomId } = socket.data;
+    // socket.on("voice-offer", (offer) => {
+    //   const { roomId } = socket.data;
 
-      if (!roomId) {
-        return;
-      }
+    //   if (!roomId) {
+    //     return;
+    //   }
 
-      console.log(`Forwarding voice offer in room ${roomId}`);
+    //   console.log(`Forwarding voice offer in room ${roomId}`);
 
-      socket.to(roomId).emit("voice-offer", offer);
-    });
+    //   socket.to(roomId).emit("voice-offer", offer);
+    // });
 
-    socket.on("voice-answer", (answer) => {
-      const { roomId } = socket.data;
+    // socket.on("voice-answer", (answer) => {
+    //   const { roomId } = socket.data;
 
-      if (!roomId) {
-        return;
-      }
+    //   if (!roomId) {
+    //     return;
+    //   }
 
-      socket.to(roomId).emit("voice-answer", answer);
-    });
+    //   socket.to(roomId).emit("voice-answer", answer);
+    // });
 
-    socket.on("voice-ice-candidate", (candidate) => {
-      const { roomId } = socket.data;
+    // socket.on("voice-ice-candidate", (candidate) => {
+    //   const { roomId } = socket.data;
 
-      if (!roomId) {
-        return;
-      }
+    //   if (!roomId) {
+    //     return;
+    //   }
 
-      socket.to(roomId).emit("voice-ice-candidate", candidate);
-    });
+    //   socket.to(roomId).emit("voice-ice-candidate", candidate);
+    // });
 
-    socket.on("voice-leave", () => {
-      const { roomId } = socket.data;
+    // socket.on("voice-leave", () => {
+    //   const { roomId } = socket.data;
 
-      if (!roomId) {
-        return;
-      }
+    //   if (!roomId) {
+    //     return;
+    //   }
 
-      socket.to(roomId).emit("voice-user-left");
-    });
+    //   socket.to(roomId).emit("voice-user-left");
+    // });
 
     socket.on("disconnect", () => {
       const { roomId, role } = socket.data;

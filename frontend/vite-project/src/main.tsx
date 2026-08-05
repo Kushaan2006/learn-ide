@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import AgoraRTC from "agora-rtc-sdk-ng";
 
 import App from "./app/App";
 

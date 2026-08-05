@@ -193,7 +193,7 @@ export default function SessionPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <VoiceControls role={details.role} />
+          <VoiceControls role={details.role} roomId={details.roomId} />
 
           <div className="hidden text-right sm:block">
             <p className="text-sm font-medium">{details.username}</p>

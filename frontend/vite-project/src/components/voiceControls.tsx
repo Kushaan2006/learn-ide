@@ -1,23 +1,18 @@
-import { useVoiceChat } from "../hooks/useVoiceChat";
+import { useAgoraVoice } from "../hooks/useVoiceChat";
 
 interface VoiceControlsProps {
   role: "teacher" | "student";
+  roomId: string;
 }
 
-export default function VoiceControls({ role }: VoiceControlsProps) {
-  const {
-    remoteAudioRef,
-    voiceStatus,
-    isMuted,
-    joinVoice,
-    toggleMute,
-    leaveVoice,
-  } = useVoiceChat({ role });
+export default function VoiceControls({ role, roomId }: VoiceControlsProps) {
+  const { voiceStatus, isMuted, joinVoice, toggleMute, leaveVoice } =
+    useAgoraVoice({
+      role,
+      roomId,
+    });
 
-  const isInVoice =
-    voiceStatus === "joining" ||
-    voiceStatus === "connecting" ||
-    voiceStatus === "connected";
+  const isInVoice = voiceStatus === "joining" || voiceStatus === "connected";
 
   return (
     <section className="voice-controls flex items-center gap-2">
@@ -43,8 +38,6 @@ export default function VoiceControls({ role }: VoiceControlsProps) {
       )}
 
       <span className="voice-status text-sm">Voice: {voiceStatus}</span>
-
-      <audio ref={remoteAudioRef} autoPlay playsInline />
     </section>
   );
 }
