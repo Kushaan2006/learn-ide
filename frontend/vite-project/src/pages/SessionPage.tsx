@@ -58,8 +58,6 @@ export default function SessionPage() {
 
     socket.on("review-code-updated", handleReviewCodeUpdated);
 
-    socket.on("review-code-changed", handleReviewCodeUpdated);
-
     socket.on("code-executed", handleRunningCodeUpdate);
 
     socket.on("input-updated", handleInputUpdate);
@@ -72,8 +70,6 @@ export default function SessionPage() {
       socket.off("code-executed", handleRunningCodeUpdate);
 
       socket.off("input-updated", handleInputUpdate);
-
-      socket.off("review-code-changed", handleReviewCodeUpdated);
     };
   }, []);
 
@@ -167,9 +163,13 @@ export default function SessionPage() {
     }
   };
 
-  const reviewCodeRecommended = (value: string) => {
+  const handleReviewCodeChange = (value: string) => {
+    if (details.role !== "teacher") {
+      return;
+    }
+
     setReviewCode(value);
-    socket.emit("review-code-change", value);
+    socket.emit("review-code-update", value);
   };
 
   const inputUpdate = (event: {
@@ -278,7 +278,7 @@ export default function SessionPage() {
                 theme={oneDark}
                 extensions={[cpp()]}
                 editable={details.role === "teacher"}
-                onChange={reviewCodeRecommended}
+                onChange={handleReviewCodeChange}
                 className="h-full"
               />
             </div>
