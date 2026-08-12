@@ -42,13 +42,15 @@ export default function SessionPage() {
       code,
       roomId,
       username,
+      role,
     }: {
       code: string;
       roomId: string;
       username: string;
+      role: string;
     }) => {
       setReviewCode(code);
-      console.log(`${roomId} - Review sent by (teacher): ${username}`);
+      console.log(`${roomId} - Review sent by (${role}): ${username}`);
     };
 
     const handleRunningCodeUpdate = ({
@@ -181,7 +183,7 @@ export default function SessionPage() {
 
     socket.emit("review-code-update", value);
     console.log(
-      `${details.roomId} - Review code changed by: ${details.username}`,
+      `${details.roomId} - Review code edited by: ${details.username}`,
     );
   };
 

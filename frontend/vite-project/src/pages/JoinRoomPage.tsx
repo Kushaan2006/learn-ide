@@ -20,6 +20,9 @@ export default function JoinRoomPage() {
       navigate(`/session/${payload.roomId}`, {
         state: payload,
       });
+      console.log(
+        `${payload.roomId} - Joined by (${payload.role}): ${payload.username}`,
+      );
     };
 
     const handleJoinError = (message: string) => {
@@ -78,6 +81,9 @@ export default function JoinRoomPage() {
     };
 
     socket.emit("join-room", payload);
+    console.log(
+      `${payload.roomId} - Join Room request sent by (${payload.role}): ${payload.username}`,
+    );
   };
 
   return (

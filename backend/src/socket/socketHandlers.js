@@ -33,8 +33,13 @@ function registerSocketHandlers(io) {
         socket.data.role = "teacher";
 
         socket.join(roomId);
+        console.log(
+          `${roomId} - Socket registered on ROOM ID on (${socket.data.role}): ${socket.data.username}`,
+        );
         socket.emit("joined-room", joinedPayload);
-
+        console.log(
+          `${roomId} - Socket Joined ROOM on (${socket.data.role}): ${socket.data.username}`,
+        );
         return;
       }
 
@@ -62,12 +67,20 @@ function registerSocketHandlers(io) {
         socket.data.role = "student";
 
         socket.join(roomId);
+        console.log(
+          `${roomId} - Socket registered on ROOM ID on (${socket.data.role}): ${socket.data.username}`,
+        );
         socket.emit("joined-room", joinedPayload);
-
+        console.log(
+          `${roomId} - Socket Joined ROOM on (${socket.data.role}): ${socket.data.username}`,
+        );
         return;
       }
 
       socket.emit("join-error", "Invalid role.");
+      console.log(
+        `${socket.data.roomId} - JOIN ERROR FOR (${socket.data.role}): ${socket.data.username}`,
+      );
     });
 
     socket.on("live-code-update", (code) => {
@@ -80,6 +93,9 @@ function registerSocketHandlers(io) {
       }
 
       socket.to(socket.data.roomId).emit("live-code-updated", code);
+      console.log(
+        `${socket.data.roomId} - Live Code Update Sent to (teacher) from: ${socket.data.username}`,
+      );
     });
 
     socket.on("code-running", ({ isRunning, output }) => {
@@ -101,10 +117,11 @@ function registerSocketHandlers(io) {
         code,
         roomId: socket.data.roomId,
         username: socket.data.username,
+        role: socket.data.role,
       });
 
       console.log(
-        `${socket.data.roomId} - Review code update forwarded by: ${socket.data.username}`,
+        `${socket.data.roomId} - Review code update forwarded by (${socket.data.role}): ${socket.data.username}`,
       );
     });
 
