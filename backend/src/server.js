@@ -15,6 +15,10 @@ const io = new Server(server, {
   cors: {
     origin: CLIENT_URL,
   },
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000,
+    skipMiddlewares: false,
+  },
 });
 
 registerSocketHandlers(io);

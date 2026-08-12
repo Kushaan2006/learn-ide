@@ -6,16 +6,20 @@ const {
 
 function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
+    console.log(`Socket recovered? ${socket.recovered}`);
     console.log(`Socket connected: ${socket.id}`);
 
     socket.data.roomId = null;
     socket.data.role = null;
+    socket.data.username = null;
 
     socket.on("join-room", (payload) => {
       if (!payload?.username || !payload?.role) {
         socket.emit("join-error", "Invalid room information.");
         return;
       }
+
+      socket.data.username = payload.username;
 
       if (payload.role === "teacher") {
         const roomId = createTeacherRoom(socket.id);
@@ -93,7 +97,15 @@ function registerSocketHandlers(io) {
         return;
       }
 
-      socket.to(socket.data.roomId).emit("review-code-updated", code);
+      socket.to(socket.data.roomId).emit("review-code-updated", {
+        code,
+        roomId: socket.data.roomId,
+        username: socket.data.username,
+      });
+
+      console.log(
+        `${socket.data.roomId} - Review code update forwarded by: ${socket.data.username}`,
+      );
     });
 
     socket.on("input-update", (input) => {

@@ -38,8 +38,17 @@ export default function SessionPage() {
       setStudentCode(newCode);
     };
 
-    const handleReviewCodeUpdated = (newCode: string) => {
-      setReviewCode(newCode);
+    const handleReviewCodeUpdated = ({
+      code,
+      roomId,
+      username,
+    }: {
+      code: string;
+      roomId: string;
+      username: string;
+    }) => {
+      setReviewCode(code);
+      console.log(`${roomId} - Review sent by (teacher): ${username}`);
     };
 
     const handleRunningCodeUpdate = ({
@@ -169,7 +178,11 @@ export default function SessionPage() {
     }
 
     setReviewCode(value);
+
     socket.emit("review-code-update", value);
+    console.log(
+      `${details.roomId} - Review code changed by: ${details.username}`,
+    );
   };
 
   const inputUpdate = (event: {
