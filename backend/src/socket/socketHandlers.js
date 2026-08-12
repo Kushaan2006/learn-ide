@@ -102,6 +102,7 @@ function registerSocketHandlers(io) {
       socket
         .to(socket.data.roomId)
         .emit("code-executed", { isRunning, output });
+      console.log(`${socket.data.roomId} - Running Code`);
     });
 
     socket.on("review-code-update", (code) => {

@@ -135,6 +135,10 @@ export default function SessionPage() {
         isRunning: false,
         output: data.stdout || "Program finished with no output.",
       });
+
+      console.log(
+        `${details.roomId} - Code Execution Commanded By (${details.role}): ${details.username}`,
+      );
       // out = data.stdout;
     } catch {
       updateExecution({
