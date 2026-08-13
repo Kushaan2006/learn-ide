@@ -14,6 +14,10 @@ function registerSocketHandlers(io) {
     socket.data.username = null;
 
     socket.on("join-room", (payload) => {
+      if (socket.data.roomId) {
+        socket.emit("join-error", "You are already in a room.");
+        return;
+      }
       if (!payload?.username || !payload?.role) {
         socket.emit("join-error", "Invalid room information.");
         return;

@@ -3,7 +3,7 @@ const cors = require("cors");
 
 const healthRoutes = require("./routes/healthRoutes");
 const compileRoutes = require("./routes/compileRoutes");
-
+const voiceRoutes = require("./routes/voiceRoutes");
 const app = express();
 
 app.use(
@@ -22,5 +22,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/health", healthRoutes);
 app.use("/api/compile", compileRoutes);
+app.use("/api/voice", voiceRoutes);
 
 module.exports = app;

@@ -10,7 +10,7 @@ import { socket } from "../services/socket";
 import type { JoinRoomPayload } from "../types/session.types";
 import RunButton from "../components/RunButton";
 // import VoiceControls from "../components/voiceControls";
-
+import VoiceControls from "../components/voiceControls";
 export default function SessionPage() {
   interface ExecutionUpdate {
     isRunning: boolean;
@@ -215,7 +215,11 @@ export default function SessionPage() {
 
         <div className="flex items-center gap-3">
           {/* <VoiceControls role={details.role} roomId={details.roomId} /> */}
-
+          <VoiceControls
+            roomId={details.roomId}
+            username={details.username}
+            role={details.role}
+          />
           <div className="hidden text-right sm:block">
             <p className="text-sm font-medium">{details.username}</p>
             <p className="text-xs capitalize text-base-content/60">
