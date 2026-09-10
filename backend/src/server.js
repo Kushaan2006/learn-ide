@@ -1,10 +1,10 @@
-require("dotenv").config();
+import "dotenv/config";
+import http from "http";
 
-const http = require("http");
-const { Server } = require("socket.io");
+import { Server } from "socket.io";
 
-const app = require("./app");
-const registerSocketHandlers = require("./socket/socketHandlers");
+import app from "./app.js";
+import { registerSocketHandlers } from "./socket/socketHandlers.js";
 
 const PORT = process.env.PORT || 3000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";

@@ -7,4 +7,8 @@ app.use(express.json());
 
 app.use("/api/compile", compileRoutes);
 
+app.get("/", (req, res) => {
+  return res.status(200).json({ message: "Welcome to Compiler Service" });
+});
+
 export default app;

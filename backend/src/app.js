@@ -1,9 +1,9 @@
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
 
-const healthRoutes = require("./routes/healthRoutes");
-const compileRoutes = require("./routes/compileRoutes");
-const voiceRoutes = require("./routes/voiceRoutes");
+import healthRoutes from "./routes/healthRoutes.js";
+import compileRequestRoutes from "./routes/compileRequestRoutes.js";
+import voiceRoutes from "./routes/voiceRoutes.js";
 const app = express();
 
 app.use(
@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/health", healthRoutes);
-app.use("/api/compile", compileRoutes);
+app.use("/api/compile", compileRequestRoutes);
 app.use("/api/voice", voiceRoutes);
 
-module.exports = app;
+export default app;

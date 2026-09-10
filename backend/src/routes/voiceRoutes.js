@@ -1,8 +1,13 @@
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const fs = require("fs");
-const path = require("path");
-const { features } = require("process");
+import express from "express";
+import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
+import { features } from "process";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const router = express.Router();
 
 const privateKey = fs.readFileSync(
@@ -66,4 +71,4 @@ router.post("/token", (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

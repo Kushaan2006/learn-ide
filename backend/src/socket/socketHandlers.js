@@ -1,10 +1,10 @@
-const {
+import {
   createTeacherRoom,
   joinStudentRoom,
   removeUserFromRoom,
-} = require("../services/roomService");
+} from "../services/roomService.js";
 
-function registerSocketHandlers(io) {
+export const registerSocketHandlers = (io) => {
   io.on("connection", (socket) => {
     console.log(`Socket recovered? ${socket.recovered}`);
     console.log(`Socket connected: ${socket.id}`);
@@ -186,6 +186,4 @@ function registerSocketHandlers(io) {
       console.log(`Socket disconnected: ${socket.id}`);
     });
   });
-}
-
-module.exports = registerSocketHandlers;
+};

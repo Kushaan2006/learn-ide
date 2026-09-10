@@ -14,7 +14,7 @@ function createUniqueRoomId() {
   return roomId;
 }
 
-function createTeacherRoom(teacherSocketId) {
+export function createTeacherRoom(teacherSocketId) {
   const roomId = createUniqueRoomId();
 
   rooms.set(roomId, {
@@ -25,7 +25,7 @@ function createTeacherRoom(teacherSocketId) {
   return roomId;
 }
 
-function joinStudentRoom(roomId, studentSocketId) {
+export function joinStudentRoom(roomId, studentSocketId) {
   const room = rooms.get(roomId);
 
   if (!room) {
@@ -47,7 +47,7 @@ function joinStudentRoom(roomId, studentSocketId) {
   };
 }
 
-function removeUserFromRoom(roomId, role) {
+export function removeUserFromRoom(roomId, role) {
   const room = rooms.get(roomId);
 
   if (!room) {
@@ -64,8 +64,4 @@ function removeUserFromRoom(roomId, role) {
   }
 }
 
-module.exports = {
-  createTeacherRoom,
-  joinStudentRoom,
-  removeUserFromRoom,
-};
+// export { createTeacherRoom, joinStudentRoom, removeUserFromRoom };
