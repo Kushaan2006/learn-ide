@@ -1,13 +1,13 @@
-const { execFile } = require("child_process");
-const crypto = require("crypto");
-const fs = require("fs/promises");
-const os = require("os");
-const path = require("path");
-const { promisify } = require("util");
+import { execFile } from "child_process";
+import crypto from "crypto";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
+import { promisify } from "util";
 
 const execFileAsync = promisify(execFile);
 
-async function compileCpp(code, stdin = "") {
+export const compileCpp = async (code, stdin = "") => {
   const executionId = crypto.randomUUID();
 
   const tempDirectory = path.join(os.tmpdir(), `learn-ide-${executionId}`);
@@ -53,7 +53,7 @@ async function compileCpp(code, stdin = "") {
       // Fixed command executed inside the container
       "bash",
       "-lc",
-      "g++ main.cpp -std=c++17 -o program && timeout 5s ./program < input.txt",
+      "g++ main.cpp -std=c++17 -o program && timeout 10s ./program < input.txt",
     ];
 
     const { stdout, stderr } = await execFileAsync("docker", dockerArguments, {
@@ -80,8 +80,4 @@ async function compileCpp(code, stdin = "") {
       force: true,
     });
   }
-}
-
-module.exports = {
-  compileCpp,
 };

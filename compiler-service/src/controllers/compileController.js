@@ -1,6 +1,6 @@
-const { compileCpp } = require("../services/compilerService");
+import { compileCpp } from "../services/compilerService.js";
 
-async function compileCode(req, res) {
+export const compileCode = async (req, res) => {
   const { language, code, stdin = " " } = req.body;
 
   if (!language) {
@@ -37,8 +37,4 @@ async function compileCode(req, res) {
     stdout: result.stdout,
     stderr: result.stderr,
   });
-}
-
-module.exports = {
-  compileCode,
 };
