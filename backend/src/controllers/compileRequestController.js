@@ -6,6 +6,7 @@ export const compileRequestController = async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.COMPILER_SERVICE_API_KEY}`,
         },
         body: JSON.stringify(req.body),
       },
