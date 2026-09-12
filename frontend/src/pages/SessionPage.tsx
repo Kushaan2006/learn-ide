@@ -1,16 +1,16 @@
 import { useEffect, useState, type SetStateAction } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
-import CodeMirror from "@uiw/react-codemirror";
-import { cpp } from "@codemirror/lang-cpp";
-import { oneDark } from "@codemirror/theme-one-dark";
-
 import { socket } from "../services/socket";
 
 import type { JoinRoomPayload } from "../types/session.types";
 import RunButton from "../components/RunButton";
 // import VoiceControls from "../components/voiceControls";
 import VoiceControls from "../components/voiceControls";
+import ReviewEditor from "../components/CodeEditor/ReviewEditor";
+import StudentEditor from "../components/CodeEditor/StudentEditor";
+import OutputWindow from "../components/Console/OutputWindow";
+import InputArea from "../components/Console/InputArea";
 export default function SessionPage() {
   interface ExecutionUpdate {
     isRunning: boolean;
@@ -19,40 +19,25 @@ export default function SessionPage() {
 
   const backendURL = import.meta.env.VITE_SERVER_URL;
 
+  //CodeEditor States
   const [studentCode, setStudentCode] = useState("");
   const [reviewCode, setReviewCode] = useState("");
 
-  //output
-  const [output, setOutput] = useState("");
-  const [isRunning, setIsRunning] = useState(false);
+  //Console States
+  const [stdin, setStdin] = useState(""); //input
+  const [output, setOutput] = useState(""); //output
 
-  //input
-  const [stdin, setStdin] = useState("");
+  //Run Button States
+  const [isRunning, setIsRunning] = useState(false);
 
   const location = useLocation();
 
   const details = location.state as JoinRoomPayload | null;
 
   useEffect(() => {
-    const handleLiveCodeUpdated = (newCode: string) => {
-      setStudentCode(newCode);
-    };
+    //ide- code updates
 
-    const handleReviewCodeUpdated = ({
-      code,
-      roomId,
-      username,
-      role,
-    }: {
-      code: string;
-      roomId: string;
-      username: string;
-      role: string;
-    }) => {
-      setReviewCode(code);
-      console.log(`${roomId} - Review sent by (${role}): ${username}`);
-    };
-
+    //run button updates
     const handleRunningCodeUpdate = ({
       isRunning,
       output,
@@ -61,26 +46,10 @@ export default function SessionPage() {
       setIsRunning(isRunning);
     };
 
-    const handleInputUpdate = (input: string) => {
-      setStdin(input);
-    };
-
-    socket.on("live-code-updated", handleLiveCodeUpdated);
-
-    socket.on("review-code-updated", handleReviewCodeUpdated);
-
     socket.on("code-executed", handleRunningCodeUpdate);
 
-    socket.on("input-updated", handleInputUpdate);
-
     return () => {
-      socket.off("live-code-updated", handleLiveCodeUpdated);
-
-      socket.off("review-code-updated", handleReviewCodeUpdated);
-
       socket.off("code-executed", handleRunningCodeUpdate);
-
-      socket.off("input-updated", handleInputUpdate);
     };
   }, []);
 
@@ -148,56 +117,6 @@ export default function SessionPage() {
     }
   };
 
-  const shouldUpdateReview = (value: string, previousValue: string) => {
-    const trimmedValue = value.trimEnd();
-
-    return (
-      value.endsWith("\n") ||
-      trimmedValue.endsWith(";") ||
-      trimmedValue.endsWith("{") ||
-      trimmedValue.endsWith("}") ||
-      trimmedValue.endsWith(")") ||
-      trimmedValue.endsWith(">") ||
-      value.length < previousValue.length
-    );
-  };
-
-  const handleStudentCodeChange = (value: string) => {
-    if (details.role !== "student") {
-      return;
-    }
-
-    const previousValue = studentCode;
-
-    setStudentCode(value);
-    socket.emit("live-code-update", value);
-
-    if (shouldUpdateReview(value, previousValue)) {
-      setReviewCode(value);
-      socket.emit("review-code-update", value);
-    }
-  };
-
-  const handleReviewCodeChange = (value: string) => {
-    if (details.role !== "teacher") {
-      return;
-    }
-
-    setReviewCode(value);
-
-    socket.emit("review-code-update", value);
-    console.log(
-      `${details.roomId} - Review code edited by: ${details.username}`,
-    );
-  };
-
-  const inputUpdate = (event: {
-    target: { value: SetStateAction<string> };
-  }) => {
-    setStdin(event.target.value);
-    socket.emit("input-update", event.target.value);
-  };
-
   return (
     <main className="flex min-h-screen flex-col bg-base-200">
       {/* Top navbar */}
@@ -236,119 +155,29 @@ export default function SessionPage() {
         {/* Editors */}
         <section className="grid flex-1 grid-cols-1 gap-4 xl:grid-cols-2">
           {/* Student editor */}
-          <article className="flex min-h-125 flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
-            <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
-              <div>
-                <h2 className="font-semibold">Student Workspace</h2>
-
-                <p className="text-xs text-base-content/60">
-                  {details.role === "student" ? "Editable" : "Read only"}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span
-                  className={`badge badge-sm ${
-                    details.role === "student" ? "badge-success" : "badge-ghost"
-                  }`}
-                >
-                  {details.role === "student" ? "Editing" : "Viewing"}
-                </span>
-
-                <RunButton isRunning={isRunning} onRun={runCode} />
-              </div>
-            </header>
-
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <CodeMirror
-                value={studentCode}
-                height="100%"
-                minHeight="500px"
-                theme={oneDark}
-                extensions={[cpp()]}
-                editable={details.role === "student"}
-                onChange={handleStudentCodeChange}
-                className="h-full"
-              />
-            </div>
-          </article>
+          <RunButton isRunning={isRunning} onRun={runCode} />
+          <StudentEditor
+            studentCode={studentCode}
+            setStudentCode={setStudentCode}
+            setReviewCode={setReviewCode}
+            details={details}
+          />
 
           {/* Review editor */}
-          <article className="flex min-h-125 flex-col overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-md">
-            <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
-              <div>
-                <h2 className="font-semibold">Review Workspace</h2>
-
-                <p className="text-xs text-base-content/60">
-                  {details.role === "teacher" ? "Editable" : "Read only"}
-                </p>
-              </div>
-
-              <span
-                className={`badge badge-sm ${
-                  details.role === "teacher" ? "badge-success" : "badge-ghost"
-                }`}
-              >
-                {details.role === "teacher" ? "Editing" : "Viewing"}
-              </span>
-            </header>
-
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <CodeMirror
-                value={reviewCode}
-                height="100%"
-                minHeight="500px"
-                theme={oneDark}
-                extensions={[cpp()]}
-                editable={details.role === "teacher"}
-                onChange={handleReviewCodeChange}
-                className="h-full"
-              />
-            </div>
-          </article>
+          <ReviewEditor
+            reviewCode={reviewCode}
+            setReviewCode={setReviewCode}
+            details={details}
+          />
         </section>
 
         {/* Console */}
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Input */}
-          <article className="rounded-box border border-base-300 bg-base-100 shadow-sm">
-            <header className="border-b border-base-300 px-4 py-3">
-              <h2 className="font-semibold">Standard Input</h2>
-              <p className="text-xs text-base-content/60">
-                Enter values exactly as your program expects them.
-              </p>
-            </header>
-
-            <div className="p-4">
-              <textarea
-                value={stdin}
-                onChange={inputUpdate}
-                placeholder={"Example:\n5\n10 20 30 40 50"}
-                disabled={isRunning}
-                className="textarea textarea-bordered min-h-32 w-full resize-y font-mono"
-              />
-            </div>
-          </article>
+          <InputArea stdin={stdin} setStdin={setStdin} isRunning={isRunning} />
 
           {/* Output */}
-          <article className="rounded-box border border-base-300 bg-base-100 shadow-sm">
-            <header className="flex items-center justify-between border-b border-base-300 px-4 py-3">
-              <div>
-                <h2 className="font-semibold">Output</h2>
-                <p className="text-xs text-base-content/60">
-                  Program output and compiler errors appear here.
-                </p>
-              </div>
-
-              {isRunning && (
-                <span className="loading loading-spinner loading-sm" />
-              )}
-            </header>
-
-            <pre className="min-h-32 overflow-auto whitespace-pre-wrap p-4 font-mono text-sm">
-              {output || "Output will appear here."}
-            </pre>
-          </article>
+          <OutputWindow isRunning={isRunning} output={output} />
         </section>
       </div>
     </main>
